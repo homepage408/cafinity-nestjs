@@ -1,0 +1,132 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Cafe {
+  id              Int       @id @default(autoincrement())
+  name            String    @db.VarChar(255)
+  tagline         String?   @db.Text
+  address         String?   @db.Text
+  city            String?   @db.VarChar(100)
+  latitude        Decimal?  @db.Decimal(10, 6)
+  longitude       Decimal?  @db.Decimal(10, 6)
+  open_hours      String?   @db.VarChar(100)
+  phone           String?   @db.VarChar(20)
+  instagram       String?   @db.VarChar(100)
+  rating          Decimal?  @default(0) @db.Decimal(2, 1)
+  reviews         Int?      @default(0)
+  price_level     Int?
+  hero_img        String?   @db.VarChar(10)
+  vibe_emoji      String?   @db.VarChar(10)
+  created_at      DateTime? @default(now())
+  updated_at      DateTime? @default(now())
+  approved        Boolean?  @default(false)
+  approved_reason String?   @db.Text
+  deleted_at      DateTime?
+
+  menus          Menu[]
+  photos         Photo[]
+  cafeTags       CafeTag[]
+  cafeFacilities CafeFacility[]
+
+  @@index([city], name: "idx_cafes_city")
+  @@map("cafes")
+}
+
+model Facility {
+  id         Int       @id @default(autoincrement())
+  name       String    @unique @db.VarChar(100)
+  created_at DateTime? @default(now())
+  updated_at DateTime? @updatedAt
+  deleted_at DateTime?
+
+  cafeFacilities CafeFacility[]
+
+  @@map("facilities")
+}
+
+model Menu {
+  id          Int       @id @default(autoincrement())
+  cafe_id     Int
+  name        String    @db.VarChar(255)
+  price       Int
+  strength    Int?
+  is_safe     Boolean?  @default(true)
+  description String?   @db.Text
+  image       String?   @db.VarChar(255)
+  created_at  DateTime? @default(now())
+  updated_at  DateTime? @updatedAt
+  deleted_at  DateTime?
+
+  cafe Cafe? @relation(fields: [cafe_id], references: [id], onDelete: Cascade)
+
+  @@index([cafe_id], name: "idx_menus_cafe_id")
+  @@map("menus")
+}
+
+model Photo {
+  id         Int       @id @default(autoincrement())
+  is_primary Boolean?  @default(false)
+  position   Int?      @default(0)
+  cafe_id    Int
+  url        String    @db.Text
+  created_at DateTime? @default(now())
+  updated_at DateTime? @updatedAt
+  deleted_at DateTime?
+
+  cafe Cafe @relation(fields: [cafe_id], references: [id], onDelete: Cascade)
+
+  @@map("photos")
+}
+
+model Tag {
+  id         Int       @id @default(autoincrement())
+  name       String    @unique @db.VarChar(100)
+  created_at DateTime? @default(now())
+  updated_at DateTime? @updatedAt
+  deleted_at DateTime?
+
+  cafeTags CafeTag[]
+
+  @@map("tags")
+}
+
+model CafeTag {
+  cafe_id    Int
+  tag_id     Int
+  created_at DateTime? @default(now())
+  updated_at DateTime? @updatedAt
+  deleted_at DateTime?
+
+  cafe Cafe @relation(fields: [cafe_id], references: [id], onDelete: Cascade)
+  tag  Tag  @relation(fields: [tag_id], references: [id], onDelete: Cascade)
+
+  @@id([cafe_id, tag_id])
+  @@map("cafe_tags")
+}
+
+model CafeFacility {
+  cafe_id     Int
+  facility_id Int
+  created_at  DateTime? @default(now())
+  updated_at  DateTime? @updatedAt
+  deleted_at  DateTime?
+
+  cafe     Cafe     @relation(fields: [cafe_id], references: [id], onDelete: Cascade)
+  facility Facility @relation(fields: [facility_id], references: [id], onDelete: Cascade)
+
+  @@id([cafe_id, facility_id])
+  @@index([cafe_id], name: "idx_cafe_facilities_cafe_id")
+  @@map("cafe_facilities")
+}

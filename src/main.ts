@@ -1,6 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { VersioningType } from '@nestjs/common';
+import { VersioningType, ValidationPipe } from '@nestjs/common';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { ResponseInterceptor, GlobalExceptionFilter } from './common/utils';
 import { PrismaService } from './modules/prisma/prisma.service';
@@ -17,6 +17,15 @@ async function bootstrap() {
 
   app.useGlobalFilters(new GlobalExceptionFilter());
   app.useGlobalInterceptors(new ResponseInterceptor());
+  app.useGlobalPipes(new ValidationPipe({
+    whitelist: true,
+    forbidNonWhitelisted: true,
+    stopAtFirstError: true,
+    transform: true,
+    // transformOptions: {
+    //   enableImplicitConversion: true,
+    // },
+  }));
 
   // prisma
   const prismaService = app.get(PrismaService);

@@ -1,9 +1,9 @@
 import {
-    CallHandler,
-    ExecutionContext,
-    Injectable,
-    NestInterceptor,
-    HttpStatus,
+  CallHandler,
+  ExecutionContext,
+  Injectable,
+  NestInterceptor,
+  HttpStatus,
 } from '@nestjs/common';
 
 import { Observable } from 'rxjs';
@@ -12,42 +12,38 @@ import { Request } from 'express';
 
 // success response global
 @Injectable()
-export class ResponseInterceptor
-    implements NestInterceptor {
-    intercept(
-        context: ExecutionContext,
-        next: CallHandler,
-    ): Observable<any> {
-        const ctx = context.switchToHttp();
+export class ResponseInterceptor implements NestInterceptor {
+  intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
+    const ctx = context.switchToHttp();
 
-        const request =
-            ctx.getRequest<Request>();
+    const request = ctx.getRequest<Request>();
 
-        return next.handle().pipe(
-            map((res: any) => {
-                const isPagination =
-                    res?.pagination !== undefined;
+    return next.handle().pipe(
+      map((res: any) => {
 
-                return {
-                    success: true,
-                    message: 'Success',
+        return {
+          success: true,
+          message: 'Success',
 
-                    data: isPagination
-                        ? res.data
-                        : res,
+          data: res?.data ?? res,
 
-                    pagination: isPagination
-                        ? res.pagination
-                        : null,
+          // conditional spreading
+          ...(res?.pagination && {
+            pagination: res.pagination,
+          }),
 
-                    code: HttpStatus.OK,
+          // conditional spreading
+          ...(res?.meta && {
+            meta: res.meta,
+          }),
 
-                    timestamp:
-                        new Date().toISOString(),
+          code: HttpStatus.OK,
 
-                    path: request.url,
-                };
-            }),
-        );
-    }
+          timestamp: new Date().toISOString(),
+
+          path: request.url,
+        };
+      }),
+    );
+  }
 }

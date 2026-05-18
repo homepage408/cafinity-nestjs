@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { paginate, paginationResponse } from '../../common/utils/pagination.utils';
 
@@ -85,14 +85,56 @@ export class CafeService {
         });
     }
 
-    // async create() {
-    //     return await this.prisma.cafe.create({
-    //         data: {
-    //             name: "Cafe ABC",
-    //             city: "Jakarta",
-    //             address: "Jl. Sudirman No. 123",
-    //         },
-    //     });
-    // }        
+    async create(createCafeDto: any) {
+
+        const existingCafe = await this.prisma.cafe.findFirst({
+            where: {
+                name: {
+                    equals: createCafeDto.name,
+                    mode: 'insensitive',
+                },
+                city: {
+                    equals: createCafeDto.city,
+                    mode: 'insensitive',
+                },
+                deleted_at: null,
+            },
+        });
+
+        if (existingCafe) {
+            throw new ConflictException('Cafe already exists');
+        }
+
+        const { phone_number, ...rest } = createCafeDto;
+        const inputData = {
+            ...rest,
+            phone: phone_number,
+        };
+
+        const data = await this.prisma.cafe.create({
+            data: inputData,
+        });
+
+        return {};
+    }
+
+    async delete(id: number) {
+        const existingCafe = await this.prisma.cafe.findUnique({
+            where: { id, deleted_at: null },
+        });
+
+        if (!existingCafe) {
+            throw new Error('Cafe not found');
+        }
+
+        await this.prisma.cafe.update({
+            where: { id },
+            data: { deleted_at: new Date() },
+        });
+
+        return {
+            
+        };
+    }
 
 }

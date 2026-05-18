@@ -1,5 +1,6 @@
-import { Controller, Get, Param, Post, Query } from '@nestjs/common';
+import { Controller, Get, Param, Post, Query, Body, Delete } from '@nestjs/common';
 import { CafeService } from './cafe.service';
+import { CreateCafeDto } from './dto/create-cafe.dto';
 
 @Controller('cafes')
 export class CafeController {
@@ -23,7 +24,12 @@ export class CafeController {
     }
 
     @Post()
-    async create() {
-        // return await this.cafeService.create();
+    async create(@Body() createCafeDto: CreateCafeDto) {
+        return await this.cafeService.create(createCafeDto);
+    }
+
+    @Delete(':id')
+    async delete(@Param('id') id: string) {
+        return await this.cafeService.delete(Number(id));
     }
 }

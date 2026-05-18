@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { CafeService } from './cafe.service';
 
 @Controller('cafes')
@@ -7,17 +7,23 @@ export class CafeController {
 
 
     @Get()
-    async findAll() {
-        let data = await this.cafeService.findAll();
-        if (!data) {
-            return {
-                status: 'error',
-                message: 'No cafes found',
-            }
-        }
-        return {
-            status: 'success',
-            data: data,
-        }
+    async findAll(@Query('page') page: number = 1, @Query('limit') limit: number = 10, @Query('city') city?: string) {
+        return await this.cafeService.findAll(limit, page, city);
+    }
+
+    @Get(':id')
+    async findOne(@Param('id') id: string) {
+        const response = await this.cafeService.findOne(Number(id));
+        return response;
+    }
+
+    @Get(":id/menus")
+    async findMenus(@Param('id') id: string) {
+        return await this.cafeService.findMenus(Number(id));
+    }
+
+    @Post()
+    async create() {
+        // return await this.cafeService.create();
     }
 }
